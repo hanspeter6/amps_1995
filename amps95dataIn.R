@@ -253,151 +253,132 @@ media_vehicles_95_simple <- readRDS('media_vehicles_95_simple.rds')
 
 # Demographic stuff (NB... will need to double check comparibility....)
 
-
-# # # drawing demographic data:
-# 
-# 
-# # want to add. personal income 
-# 
-# table(all_data$qpd16_1a)
-# table(all_data$qpd16_1b)
-# table(all_data$qpd16_1c)
-# 
-# p_inc <- all_data[,str_detect(names(all_data), '^qpd16_+')]
-# p_inc$qpd16_1b <- p_inc$qpd16_1b + 24
-# p_inc$qpd16_1c <- p_inc$qpd16_1c + 29
-# 
-# 
-# table(p_inc$qpd16_1a)
-# table(p_inc$qpd16_1b)
-# table(p_inc$qpd16_1c)
-# personal_income <- rowSums(p_inc, na.rm = TRUE)
-# 
-# table(personal_income)
-# 
-# personal_income[personal_income == 0] <- NA # 0 becomes NA
-# personal_income[personal_income == 1 |
-#                         personal_income == 2 |
-#                         personal_income == 3 |
-#                         personal_income == 4 |
-#                         personal_income == 5] <- 1 # 1,2,3,4,5 becomes 1
-# personal_income[personal_income == 6 |
-#                         personal_income == 7 |
-#                         personal_income == 8 |
-#                         personal_income == 9] <- 2 # 6,7,8,9 becomes 2
-# 
-# personal_income[personal_income == 10 |
-#                         personal_income == 11 |
-#                         personal_income == 12 |
-#                         personal_income == 13] <- 3 # 10,11,12,13 becomes 3
-# personal_income[personal_income == 14 |
-#                         personal_income == 15 |
-#                         personal_income == 16] <- 4 # 14,15,16 becomes 4
-# personal_income[personal_income == 17 |
-#                         personal_income == 18] <-  5 # 17,18 becomes 5
-# personal_income[personal_income == 19 |
-#                         personal_income == 20] <-  6 # 19,20 becomes 6
-# personal_income[personal_income == 21 |
-#                         personal_income == 22 |
-#                         personal_income == 23] <- 7 # 21,22,23 becomes 7
-# personal_income[personal_income == 24 |
-#                         personal_income == 25 |
-#                         personal_income == 26 |
-#                         personal_income == 27 |
-#                         personal_income == 28 |
-#                         personal_income == 29] <- 8 # 24,25,26,27,28,29 becomes 8
-# 
-# personal_income[personal_income == 30] <- 1 # 30 becomes 1
-# personal_income[personal_income == 31] <- NA # 31 becomes 1
-# table(personal_income)
-# 
-# # first without personal_income
-# demogr_vars <- c('educatn', # education level
-#                  'h_inc_g1', # household income level
-#                  'sex',
-#                  'age',
-#                  'lang',
-#                  'race_1',
-#                  'province',
-#                  'wrk_stat',
-#                  'qpd1') #'qpd1' # marital status
-# 
-# demogrs <- all_data[,demogr_vars] %>%
-#         mutate(pers_inc = personal_income) %>%
-#         mutate(quesno = all_data$quesno) %>%
-#         mutate(popwght = all_data$popwght) %>%
-#         select(quesno, popwght, everything())
-# # 
-# names(demogrs) <- c("quesno",
-#                     "popwght",
-#                     "edu",
-#                     "hh_inc",
-#                     "sex",
-#                     "age",
-#                     "lang",
-#                     "race",
-#                     "prov",
-#                     "wrk_status",
-#                     "mart_status",
-#                     "pers_inc")
-# # 
-# # 
-# # actually also want to add a variable for metropole:
-# 
-# metropole <- all_data[,str_detect(names(all_data),"metrop\\d" )]
-# 
-# # enumerate the metropoles
-# vec <- seq(0,12)
-# for(i in 1: nrow(metropole)){
-#         metropole[i,] <- metropole[i,] + vec
-# }
-# 
-# metropole <- metropole %>%
-#         mutate(metro = rowSums(metropole, na.rm = TRUE))
-# 
-# table(metropole$metro) # seems that all the 19s are the sum of 7 & 12s (ie, Soweto)
-# 
-# # code as such, ie all 19s are actually 12s (so keeping the double count in the 7s)
-# metropole$metro <- ifelse(metropole$metro == 19, 12, metropole$metro)
-# 
-# demogrs95 <- demogrs95 %>%
-#         mutate(metro = metropole$metro)
-#
-# problematic response 1542
-length(which(is.na(media95)))
-length(which(is.na(demogrs95))) # all in pers_inc
-
-# get rid of problematic record 1542
-demogrs95 <- demogrs95[-1542,]
-
-
-# ensure correct typing:
-# education
-# to create ordered factor took 8 and fit it after matric (ie 6) then change 6 to 7 and 7 to eight
-demogrs95 <- readRDS("demogrs95.rds")
-table(demogrs95$edu)
-for(i in 1: nrow(demogrs95)) {
-        if(demogrs95$edu[i] %in% c(6,7)) {
-                demogrs95$edu[i] <- demogrs95$edu[i] + 1
-                }
-        else if(demogrs95$edu[i] == 8) {
-                demogrs95$edu[i] <- 6
-                }
+age <- all_data_95[,'age'] # only four levels (deal with this...)
+#1: 16-24
+#2: 25-34
+#3: 35-49
+#4: 50-64
+#5: 65+
+sex <- all_data_95[,'sex']
+# 1 male
+# 2 female
+edu <- all_data_95[,'educatn']
+for(i in 1: length(edu)) {
+        if(edu[i] %in% c(6,7)) {
+                edu[i] <- edu[i] + 1
+        }
+        else if(edu[i] == 8) {
+                edu[i] <- 6
+        }
 }
+hh_inc <- all_data_95[,'h_inc_g1'] # nb double check scales...
+race <- all_data_95[,'race_1']
+# # dataset 95: 1 = white, 2 = black, 3 = coloured, 4 = indian.
+# # 2012 dataset: 1 = black, 2 = coloured, 3 = indian, 4 = white
+# # change 1995 codes to 2012 codes for consistency: 1 to 4; 2 to 1; 3 to 2 and 4 to 3
+# 
+race <- ifelse(race == 1, 9, race)
+race <- ifelse(race == 2, 6, race)
+race <- ifelse(race == 3, 7, race)
+race <- ifelse(race == 4, 8, race)
+race <- race - 5
 
-demogrs95$edu <- factor(demogrs95$edu, ordered = TRUE)
-demogrs95$hh_inc <- factor(demogrs95$hh_inc, ordered = TRUE)
-demogrs95$sex <- factor(demogrs95$sex, ordered = FALSE)
-demogrs95$age <- factor(demogrs95$age, ordered = TRUE)
-demogrs95$lang <- factor(demogrs95$lang, ordered = FALSE)
-demogrs95$race <- factor(demogrs95$race, ordered = FALSE)
-demogrs95$prov <- factor(demogrs95$prov, ordered = FALSE)
-demogrs95$wrk_status <- factor(demogrs95$wrk_status, ordered = FALSE)
-demogrs95$mart_status <- factor(demogrs95$mart_status, ordered = FALSE)
-demogrs95$pers_inc <- factor(demogrs95$pers_inc, ordered = TRUE)
-demogrs95$metro <- factor(demogrs95$metro, ordered = FALSE)
+province <- all_data_95[,'province']
 
-saveRDS(demogrs95, "demogrs95.rds")
-demogrs95 <- readRDS("demogrs95.rds")
+metro1 <- all_data_95[,'metrop1']
+metro2 <- all_data_95[,'metrop2']
+metro3 <- all_data_95[,'metrop3']
+metro4 <- all_data_95[,'metrop4']
+metro5 <- all_data_95[,'metrop5']
+metro6 <- all_data_95[,'metrop6']
+metro7 <- all_data_95[,'metrop7']
+metro8 <- all_data_95[,'metrop8']
+metro9 <- all_data_95[,'metrop9']
+metro10 <- all_data_95[,'metrop10']
+metro11 <- all_data_95[,'metrop11']
+metro12 <- all_data_95[,'metrop12']
+metro13 <- all_data_95[,'metrop13']
 
+
+# think should be able to place into single set:
+
+metro1[metro1 == 1] <- 1
+metro2[metro2 == 1] <- 2
+metro3[metro3 == 1] <- 3
+metro4[metro4 == 1] <- 4
+metro5[metro5 == 1] <- 5
+metro6[metro6 == 1] <- 6
+metro7[metro7 == 1] <- 7
+metro8[metro8 == 1] <- 8
+metro9[metro9 == 1] <- 9
+metro10[metro10 == 1] <- 10
+metro11[metro11 == 1] <- 11
+# metro12[metro12 == 1] <- 12
+metro13[metro13 == 1] <- 12 # vaal
+
+test <- cbind(metro1,
+         metro2,
+         metro3,
+         metro4,
+         metro5,
+         metro6,
+         metro7,
+         metro8,
+         metro9,
+         metro10,
+         metro11,
+         # metro12,
+         metro13)
+
+metro <- rowSums(test, na.rm = TRUE)
+
+# # collect and code into single metro set:
+# #0 = no metro
+# #1 Cape Town
+# #2 Cape Town Fringe Area
+# #3 Port Elizabeth/Uitenhage
+# #4 East London
+# #5 Durban
+# #6 Bloemfontein
+# #7 Greater Johannesburg
+# #8 Reef
+# #9 Pretoria
+# #10 Kimberley
+# ##11 Pietermaritzburg
+# ##12 Vaal
+# ##13 Welkom # not in this set...
+
+table(metro) # yes, continue
+
+lang <- all_data_95[,'lang']
+# 1 English
+# 2 Afrikaans
+# 3 African 1
+# 4 African 2
+
+mar_status <- all_data_95[,'qpd1']
+
+# problematic response 1542
+
+mar_status[1542] <- 2 # place it in largest category...
+
+demographics_95 <- data.frame(qn = all_data_95$quesno, # no lifestyle or attitudes yet
+                              pwgt = all_data_95$popwght,
+                              age,
+                              sex,
+                              edu,
+                              hh_inc,
+                              race,
+                              province,
+                              metro,
+                              lang,
+                              mar_status)
+
+
+
+
+saveRDS(demographics_95, "demographics_95.rds")
+demographics_95 <- readRDS("demographics_95.rds")
+
+# end for now
 
