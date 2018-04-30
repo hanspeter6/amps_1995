@@ -254,7 +254,7 @@ media_vehicles_95_simple <- readRDS('media_vehicles_95_simple.rds')
 
 # Demographic stuff (NB... will need to double check comparibility....)
 
-age <- all_data_95[,'age'] # only four levels (deal with this...)
+age_a <- all_data_95[,'age'] # only four levels (deal with this...)
 #1: 16-24
 #2: 25-34
 #3: 35-49
@@ -266,6 +266,22 @@ age <- ifelse(age > 15 & age < 25, 1, age)
 age <- ifelse(age > 24 & age < 45, 2, age)
 age <- ifelse(age > 44 & age < 55, 3, age)
 age <- ifelse(age > 54, 4, age)
+
+# deal with NAs by imputing according to proportion of age category in data set, randomly allocated...so assuming MCAR
+for(i in 1:length(age)) {
+        if(is.na(age[i])) {
+                age[i] <- sample(c(1:4), 1, replace = TRUE, prob = c(table(age)[1]/length(age),
+                                                                     table(age)[2]/length(age),
+                                                                     table(age)[3]/length(age),
+                                                                     table(age)[4]/length(age)))
+        }
+        else {
+                age[i] <- age[i]
+        }
+}
+
+# try to allocate at random numbers(1-4) based on the proportion of observed
+
 
 sex <- all_data_95[,'sex']
 # 1 male
@@ -436,13 +452,23 @@ set95_simple <- demographics_95 %>%
         left_join(media_vehicles_95_simple) %>%
         filter(metro != 0)
 
-# scale media type and media vehicles
-set95[,12:147] <- scale(set95[,12:147])
-set95_simple[,12:147] <- scale(set95_simple[,12:147])
+# get rid of zero variances:
+ind_95 <- nearZeroVar(set95[,12:ncol(set95)], saveMetrics = TRUE)
+good_set <- set95[,12:ncol(set95)][,!ind_95$zeroVar]
+set95 <- data.frame(cbind(set95[,1:11], good_set))
 
-# save them
+ind_95_simple <- nearZeroVar(set95_simple[,12:ncol(set95_simple)], saveMetrics = TRUE)
+good_set_simple <- set95_simple[,12:ncol(set95_simple)][,!ind_95_simple$zeroVar]
+set95_simple <- data.frame(cbind(set95_simple[,1:11], good_set_simple))
+
+# scale media type and media vehicles
+set95[,12:ncol(set95)] <- scale(set95[,12:ncol(set95)])
+set95_simple[,12:ncol(set95_simple)] <- scale(set95_simple[,12:ncol(set95_simple)])
+
+# save them:
 saveRDS(set95, "set95.rds")
 saveRDS(set95_simple, "set95_simple.rds")
+
 
 # end for now
 
